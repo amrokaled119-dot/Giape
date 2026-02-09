@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>غيابي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background-color: #f3f4f6; }
+        .card-green { border-right: 6px solid #10b981; }
+        .card-yellow { border-right: 6px solid #f59e0b; }
+        .card-red { border-right: 6px solid #ef4444; }
+        .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+
+    <div id="onboarding" class="container mx-auto px-4 py-8 max-w-md">
+        <div class="bg-white p-6 rounded-2xl shadow-xl border border-blue-100">
+            <h1 class="text-2xl font-bold text-blue-800 mb-2">أهلاً يا دكتور المستقبل..</h1>
+            <p class="text-gray-600 mb-6 italic text-sm">"سجل بياناتك وخلنا نلحق ما يمكن إنقاذه قبل الحرمان."</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-1">الاسم الرباعي (عشان الهيبة):</label>
+                    <input type="text" id="userName" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="أدخل اسمك هنا">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">الكلية (ثابتة):</label>
+                    <input type="text" value="جامعة حضرموت - كلية العلوم الإدارية" disabled class="w-full p-3 bg-gray-100 border rounded-xl text-gray-500 cursor-not-allowed">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">القسم:</label>
+                        <select id="userDept" class="w-full p-3 border rounded-xl outline-none bg-white">
+                            <option>إدارة أعمال</option>
+                            <option>التسويق</option>
+                            <option>المالية والمصرفية</option>
+                            <option>المحاسبة</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">المستوى:</label>
+                        <select id="userLevel" class="w-full p-3 border rounded-xl outline-none bg-white">
+                            <option>المستوى الأول</option>
+                            <option>المستوى الثاني</option>
+                            <option>المستوى الثالث</option>
+                            <option>المستوى الرابع</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="saveProfile()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition">إلى الجدول الدراسي ←</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scheduleSetup" class="container mx-auto px-4 py-8 max-w-md hidden">
+        <h2 class="text-xl font-bold mb-4 text-gray-800">تجهيز الفخ (الجدول):</h2>
+        <div id="daysContainer" class="space-y-6">
+            </div>
+        <button onclick="saveSchedule()" class="w-full mt-8 bg-green-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-green-700 transition">بدء الرحلة الجامعية 🚀</button>
+    </div>
+
+    <div id="dashboard" class="container mx-auto px-4 py-8 max-w-md hidden">
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 id="greeting" class="text-2xl font-bold text-gray-800">يا هلا بـ</h1>
+                <p class="text-sm text-gray-500">وضعك الحالي تحت المجهر</p>
+            </div>
+            <button onclick="showStats()" class="bg-gray-100 p-2 rounded-full">📊</button>
+        </header>
+
+        <div id="coursesGrid" class="space-y-4">
+            </div>
+    </div>
+
+    <div id="statsScreen" class="container mx-auto px-4 py-8 max-w-md hidden">
+        <button onclick="navigateTo('dashboard')" class="text-blue-600 mb-4 inline-block font-bold">← العودة للوحة التحكم</button>
+        <div class="bg-white p-6 rounded-2xl shadow-lg text-center">
+            <h2 class="text-xl font-bold mb-4">تحليل الإنتاجية vs التسليك</h2>
+            <div id="statsResult" class="mb-6">
+                </div>
+            <p id="sarcasticComment" class="text-lg italic font-medium text-red-600 px-4"></p>
+        </div>
+    </div>
+
+    <div id="absenceModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-xs text-center">
+            <h3 class="font-bold text-lg mb-4">تسجيل غياب اليوم</h3>
+            <p class="mb-4 text-gray-600 italic">"هل الدكتور حضّر الأسماء؟"</p>
+            <div class="flex gap-4 mb-4">
+                <button onclick="askReason(true)" class="flex-1 bg-red-100 text-red-700 py-2 rounded-lg font-bold">نعم، غدر بنا</button>
+                <button onclick="askReason(false)" class="flex-1 bg-green-100 text-green-700 py-2 rounded-lg font-bold">لا، ستر من الله</button>
+            </div>
+            
+            <div id="reasonSection" class="hidden">
+                <p class="mb-2 text-sm font-semibold">ايش العذر (كالعادة)؟</p>
+                <select id="absenceReason" class="w-full p-2 border rounded-lg mb-4">
+                    <option value="medical">عذر طبي (وهمي)</option>
+                    <option value="transport">المواصلات (زحمة الجسر)</option>
+                    <option value="chilling">تسلكع في الكافتيريا</option>
+                    <option value="sleep">النوم سلطان</option>
+                    <option value="work">شغلة مهمة تعود بالفائدة</option>
+                </select>
+                <button onclick="finalizeAbsence()" class="w-full bg-blue-600 text-white py-2 rounded-lg">تثبيت الكارثة</button>
+            </div>
+            <button onclick="closeModal()" class="mt-4 text-gray-400 text-sm">إلغاء</button>
+        </div>
+    </div>
+
+    <script>
+        let userData = JSON.parse(localStorage.getItem('hu_tracker')) || null;
+        let selectedCourseIndex = null;
+
+        // Initialize App
+        window.onload = () => {
+            if (userData) {
+                navigateTo('dashboard');
+                renderDashboard();
+            } else {
+                renderScheduleSetup();
+            }
+        };
+
+        function navigateTo(screenId) {
+            ['onboarding', 'scheduleSetup', 'dashboard', 'statsScreen'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        // Onboarding & Profile
+        function saveProfile() {
+            const name = document.getElementById('userName').value;
+            if(!name) return alert("سجل اسمك يا دكتور!");
+            userData = {
+                name: name,
+                dept: document.getElementById('userDept').value,
+                level: document.getElementById('userLevel').value,
+                courses: []
+            };
+            navigateTo('scheduleSetup');
+        }
+
+        // Schedule Generation
+        function renderScheduleSetup() {
+            const days = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+            const container = document.getElementById('daysContainer');
+            container.innerHTML = days.map((day, dIdx) => `
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <h3 class="font-bold text-blue-800 mb-3 underline">${day}</h3>
+                    <div class="space-y-2">
+                        ${[1, 2].map(num => `
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" placeholder="اسم المادة" class="course-name p-2 rounded-lg text-sm border">
+                                <input type="text" placeholder="اسم الدكتور" class="prof-name p-2 rounded-lg text-sm border">
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function saveSchedule() {
+            const courseInputs = document.querySelectorAll('.course-name');
+            const profInputs = document.querySelectorAll('.prof-name');
+            
+            courseInputs.forEach((input, index) => {
+                if (input.value.trim() !== "") {
+                    userData.courses.push({
+                        name: input.value,
+                        prof: profInputs[index].value || "دكتور مجهول",
+                        absences: 0,
+                        reasons: []
+                    });
+                }
+            });
+
+            if (userData.courses.length === 0) return alert("أضف مادة واحدة على الأقل، لا تستهبل!");
+            
+            localStorage.setItem('hu_tracker', JSON.stringify(userData));
+            navigateTo('dashboard');
+            renderDashboard();
+        }
+
+        // Dashboard Logic
+        function renderDashboard() {
+            document.getElementById('greeting').innerText = `يا هلا بـ ${userData.name}`;
+            const grid = document.getElementById('coursesGrid');
+            grid.innerHTML = userData.courses.map((course, idx) => {
+                const remaining = 4 - course.absences;
+                let colorClass = "card-green";
+                if (course.absences >= 2) colorClass = "card-yellow";
+                if (course.absences >= 4) colorClass = "card-red";
+
+                return `
+                <div class="bg-white p-5 rounded-2xl shadow-sm ${colorClass} relative">
+                    <h3 class="font-bold text-lg">${course.name}</h3>
+                    <p class="text-gray-500 text-sm mb-4">د. ${course.prof}</p>
+                    <div class="flex justify-between items-end">
+                        <div class="text-sm">
+                            <span class="block">الغياب: <b class="text-lg">${course.absences}</b></span>
+                            <span class="text-gray-400">المتبقي: ${remaining < 0 ? 0 : remaining}</span>
+                        </div>
+                        <button onclick="openAbsenceModal(${idx})" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm shadow-md">تسجيل غياب اليوم</button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // Absence Logging Logic
+        function openAbsenceModal(idx) {
+            selectedCourseIndex = idx;
+            document.getElementById('absenceModal').classList.remove('hidden');
+            document.getElementById('absenceModal').classList.add('flex');
+            document.getElementById('reasonSection').classList.add('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('absenceModal').classList.add('hidden');
+        }
+
+        function askReason(tookAttendance) {
+            if (!tookAttendance) {
+                alert("الحمد لله.. روح اشرب شاي عدني، ما بينحسب عليك غياب.");
+                closeModal();
+            } else {
+                document.getElementById('reasonSection').classList.remove('hidden');
+            }
+        }
+
+        function finalizeAbsence() {
+            const reason = document.getElementById('absenceReason').value;
+            userData.courses[selectedCourseIndex].absences += 1;
+            userData.courses[selectedCourseIndex].reasons.push(reason);
+            
+            localStorage.setItem('hu_tracker', JSON.stringify(userData));
+            renderDashboard();
+            closeModal();
+
+            if (userData.courses[selectedCourseIndex].absences >= 4) {
+                alert("⚠️ الحرمان يناديك! الكرت الأحمر طلع.");
+            }
+        }
+
+        // Statistics Screen Logic
+        function showStats() {
+            navigateTo('statsScreen');
+            let totalAbsences = 0;
+            let slackingCount = 0;
+
+            userData.courses.forEach(c => {
+                totalAbsences += c.absences;
+                c.reasons.forEach(r => {
+                    if (['chilling', 'sleep'].includes(r)) slackingCount++;
+                });
+            });
+
+            const slackPercent = totalAbsences > 0 ? Math.round((slackingCount / totalAbsences) * 100) : 0;
+            
+            document.getElementById('statsResult').innerHTML = `
+                <div class="text-4xl mb-2">🤷‍♂️</div>
+                <p class="text-gray-600">إجمالي غياباتك: <span class="font-bold text-black">${totalAbsences}</span></p>
+                <p class="text-gray-600">نسبة "التسليت": <span class="font-bold text-red-500">${slackPercent}%</span></p>
+            `;
+
+            let comment = "بداية موفقة.. استمر في الالتزام يا بطل.";
+            if (slackPercent > 50) comment = "أنت تنافس على لقب زبون الكافيه المثالي.. الجامعة مش لك.";
+            if (totalAbsences > 10) comment = "شكلك بتفتح مشروع خاص قبل التخرج من كثر الغياب.";
+            
+            document.getElementById('sarcasticComment').innerText = comment;
+        }
+    </script>
+</body>
+</html>
