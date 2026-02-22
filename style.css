@@ -1,102 +1,255 @@
-/* استيراد الخط المفضل للتصاميم العربية الحديثة */
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
+/* استيراد الخط المفضل للتصاميم العربية */
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap');
 
 :root {
-    --primary-blue: #1e40af;
-    --success-green: #10b981;
-    --warning-yellow: #f59e0b;
-    --danger-red: #ef4444;
+    /* ألوان الوضع الفاتح */
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --primary: #2563eb;
+    --primary-dark: #1e40af;
+    --accent-gradient: linear-gradient(135deg, #2563eb, #4f46e5);
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --success: #10b981;
+    --border-color: #e2e8f0;
+    --header-bg: rgba(255, 255, 255, 0.8);
+}
+
+/* خصائص الوضع الليلي */
+body.dark-mode {
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    --header-bg: rgba(15, 23, 42, 0.8);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Tajawal', sans-serif;
 }
 
 body {
-    font-family: 'Tajawal', sans-serif;
-    background-color: #f8fafc;
-    color: #1e293b;
-    line-height: 1.6;
-    overflow-x: hidden;
-}
-
-/* تأثير الزجاج (Glassmorphism) للكروت */
-.glass-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-}
-
-/* مؤشرات حالة الغياب (Color Coding) */
-.card-green { 
-    border-right: 8px solid var(--success-green); 
-    transition: transform 0.2s ease;
-}
-
-.card-yellow { 
-    border-right: 8px solid var(--warning-yellow); 
-}
-
-.card-red { 
-    border-right: 8px solid var(--danger-red);
-    animation: pulse-border 2s infinite;
-}
-
-/* أنيميشن بسيط للتحذير عند اقتراب الحرمان */
-@keyframes pulse-border {
-    0% { border-right-color: var(--danger-red); }
-    50% { border-right-color: #fca5a5; }
-    100% { border-right-color: var(--danger-red); }
-}
-
-/* تنسيق المدخلات (Inputs) */
-input, select {
+    background-color: var(--bg-color);
+    color: var(--text-main);
     transition: all 0.3s ease;
-    border: 1px solid #e2e8f0 !important;
+    line-height: 1.6;
 }
 
-input:focus, select:focus {
-    border-color: var(--primary-blue) !important;
-    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
-    transform: translateY(-1px);
+/* 1. التنسيق الثابت للهيدر (Fixed Cover) */
+header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    background: var(--header-bg);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
 }
 
-/* الأزرار وتأثيرات الضغط */
-button {
-    transition: all 0.2s active;
-    user-select: none;
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
-button:active {
-    transform: scale(0.95);
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-/* تحسين شكل السكرول بار */
-::-webkit-scrollbar {
-    width: 6px;
+.brand-name {
+    font-weight: 900;
+    font-size: 1.5rem;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
+/* 2. بانر التنبيه الذكي (Smart Banner) */
+.banner-box {
+    margin-top: 1.5rem;
+    background: var(--accent-gradient);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3);
 }
 
-::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #4ade80;
+    border-radius: 50%;
+    margin-left: 0.5rem;
+    box-shadow: 0 0 10px #4ade80;
 }
 
-/* أنيميشن ظهور الشاشات */
-.screen-fade-in {
-    animation: fadeIn 0.4s ease-out;
+.banner-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.8;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+#ai-title {
+    font-size: 1.25rem;
+    font-weight: 900;
+    margin: 0.5rem 0;
+}
+
+/* 3. شبكة الإحصائيات (Quick Stats) */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    padding: 1.25rem;
+    border-radius: 1.5rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.stat-card h3 {
+    font-size: 1.75rem;
+    font-weight: 900;
+    margin-top: 0.25rem;
+}
+
+/* 4. الرسوم البيانية البسيطة (Progress Bars) */
+.course-card {
+    background: var(--card-bg);
+    border-radius: 2rem;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    position: relative;
+}
+
+.progress-container {
+    width: 100%;
+    background: var(--bg-color);
+    height: 10px;
+    border-radius: 999px;
+    margin: 1rem 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bg-safe { background-color: var(--success); }
+.bg-warning { background-color: var(--warning); }
+.bg-danger { background-color: var(--danger); }
+
+/* 5. الأزرار والمدخلات */
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 1.25rem;
+    font-weight: 700;
+    width: 100%;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-primary:active { transform: scale(0.98); }
+
+input, select {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-main);
+    margin-bottom: 1rem;
+}
+
+/* 6. النوافذ المنبثقة (Modals) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    z-index: 2000;
+}
+
+.setup-card, .onboarding-card, .modal-content {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 2.5rem;
+    max-width: 450px;
+    width: 100%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* تنسيق خاص لأعذار التسليت */
-.slacking-stat {
-    background: #fff1f2;
-    color: #9f1239;
-    padding: 1rem;
-    border-radius: 12px;
-    border: 1px dashed #fda4af;
+.hidden { display: none !important; }
+
+/* 7. الفوتر والتنسيقات الإضافية */
+.main-footer {
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
 }
+
+.app-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 6rem 1rem 2rem;
+}
+
+.header-actions button {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.btn-reset { color: var(--danger); }
