@@ -1,191 +1,234 @@
-// --- 1. إدارة البيانات والتهيئة ---
-let appData = JSON.parse(localStorage.getItem('hu_tracker')) || {
-    profile: null,
-    courses: []
-};
+// --- 1. إعداد البيانات الأساسية ---
+let appData = JSON.parse(localStorage.getItem('gyabi_data')) || null;
 
-// تشغيل التطبيق عند التحميل
+// تشغيل التطبيق عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
-    if (appData.profile) {
-        showDashboard();
+    initTheme();
+    if (appData) {
+        renderDashboard();
+        showScreen('dashboard-view');
+        document.getElementById('reset-session').classList.remove('hidden');
     } else {
-        navigateTo('onboarding');
+        showScreen('onboarding-view');
     }
 });
 
-// وظيفة التنقل بين الشاشات
-function navigateTo(screenId) {
-    document.querySelectorAll('.container, #onboarding, #scheduleSetup, #dashboard, #statsScreen')
-        .forEach(s => s.classList.add('hidden'));
-    
-    const target = document.getElementById(screenId);
-    target.classList.remove('hidden');
-    target.classList.add('screen-fade-in');
+// دالة التنقل بين الشاشات
+function showScreen(screenId) {
+    const screens = ['onboarding-view', 'setup-view', 'dashboard-view'];
+    screens.forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+    });
+    document.getElementById(screenId).classList.remove('hidden');
 }
 
-// --- 2. إعداد الملف الشخصي والجدول ---
-function saveProfile() {
-    const name = document.getElementById('userName').value.trim();
-    if (!name) return alert("يا دكتور، سجل اسمك أولاً!");
+// --- 2. إدارة الوضع الليلي ---
+function initTheme() {
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('theme-toggle').innerText = '☀️';
+    }
+}
 
-    appData.profile = {
-        name: name,
-        dept: document.getElementById('userDept').value,
-        level: document.getElementById('userLevel').value
+document.getElementById('theme-toggle').addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    document.getElementById('theme-toggle').innerText = isDark ? '☀️' : '🌙';
+});
+
+// --- 3. إعداد الحساب لأول مرة (Onboarding) ---
+document.getElementById('start-app').addEventListener('click', () => {
+    const name = document.getElementById('input-user-name').value.trim();
+    if (!name) return alert("سجل اسمك يا دكتور، بلاش استعجال!");
+
+    appData = {
+        profile: {
+            name: name,
+            dept: document.getElementById('select-dept').value,
+            level: document.getElementById('select-level').value
+        },
+        courses: []
     };
     
     renderScheduleInputs();
-    navigateTo('scheduleSetup');
-}
+    showScreen('setup-view');
+});
 
+// --- 4. إعداد وتعديل الجدول ---
 function renderScheduleInputs() {
     const days = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
-    const container = document.getElementById('daysContainer');
-    container.innerHTML = days.map(day => `
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-4">
-            <h3 class="font-bold text-blue-700 mb-3 border-r-4 border-blue-600 pr-2">${day}</h3>
-            ${[1, 2].map(i => `
-                <div class="grid grid-cols-2 gap-2 mb-2">
-                    <input type="text" placeholder="اسم المادة" class="c-name p-2 border rounded-lg text-sm focus:ring-1 focus:ring-blue-400 outline-none">
-                    <input type="text" placeholder="اسم الدكتور" class="p-name p-2 border rounded-lg text-sm focus:ring-1 focus:ring-blue-400 outline-none">
-                </div>
-            `).join('')}
-        </div>
-    `).join('');
-}
-
-function saveSchedule() {
-    const names = document.querySelectorAll('.c-name');
-    const profs = document.querySelectorAll('.p-name');
-    
-    appData.courses = []; // إعادة تعيين لضمان عدم التكرار
-    
-    names.forEach((input, i) => {
-        if (input.value.trim() !== "") {
-            appData.courses.push({
-                id: Date.now() + i,
-                name: input.value.trim(),
-                prof: profs[i].value.trim() || "دكتور مجهول",
-                absences: 0,
-                reasons: []
-            });
-        }
-    });
-
-    if (appData.courses.length === 0) return alert("سجل مادة واحدة على الأقل.. بلاش تسليت من الآن!");
-
-    saveAndRefresh();
-    showDashboard();
-}
-
-// --- 3. لوحة التحكم (Dashboard) ---
-function showDashboard() {
-    navigateTo('dashboard');
-    document.getElementById('greeting').innerHTML = `يا هلا بـ <span class="text-blue-600">${appData.profile.name}</span>`;
-    renderCourseCards();
-}
-
-function renderCourseCards() {
-    const grid = document.getElementById('coursesGrid');
-    grid.innerHTML = appData.courses.map((course, index) => {
-        let statusClass = "card-green";
-        if (course.absences >= 2) statusClass = "card-yellow";
-        if (course.absences >= 4) statusClass = "card-red";
-
+    const container = document.getElementById('days-inputs-container');
+    container.innerHTML = days.map(day => {
+        // إذا كان هناك بيانات سابقة للمواد في هذا اليوم، نعرضها
+        const existing = appData.courses.filter(c => c.day === day);
         return `
-            <div class="bg-white p-5 rounded-2xl shadow-sm ${statusClass} relative mb-4">
-                <div class="flex justify-between items-start mb-2">
-                    <h3 class="font-bold text-lg text-gray-800">${course.name}</h3>
-                    <span class="text-xs bg-gray-100 px-2 py-1 rounded-full text-gray-500">${course.absences}/4</span>
-                </div>
-                <p class="text-gray-500 text-sm mb-4 italic">د. ${course.prof}</p>
-                <div class="flex justify-between items-center">
-                    <div class="text-xs font-semibold ${course.absences >= 4 ? 'text-red-600' : 'text-gray-400'}">
-                        ${course.absences >= 4 ? 'وضعية الحرمان 💀' : `متبقي لك ${4 - course.absences} غيابات`}
+            <div class="day-input-group" style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+                <h4 style="margin-bottom: 0.5rem; color: var(--primary); font-weight: 900;">📍 يوم ${day}</h4>
+                ${[0, 1, 2].map(i => `
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <input type="text" class="course-name-in" data-day="${day}" placeholder="اسم المادة" value="${existing[i]?.name || ''}">
+                        <input type="text" class="prof-name-in" placeholder="اسم الدكتور" value="${existing[i]?.prof || ''}">
                     </div>
-                    <button onclick="openAbsenceModal(${index})" 
-                            class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2 rounded-lg font-bold transition-all shadow-md">
-                        تسجيل غياب
-                    </button>
-                </div>
+                `).join('')}
             </div>
         `;
     }).join('');
 }
 
-// --- 4. منطق تسجيل الغياب (Absence Logic) ---
-let currentCourseIndex = null;
+document.getElementById('save-setup').addEventListener('click', () => {
+    const names = document.querySelectorAll('.course-name-in');
+    const profs = document.querySelectorAll('.prof-name-in');
+    const newCourses = [];
 
-function openAbsenceModal(index) {
-    currentCourseIndex = index;
-    const modal = document.getElementById('absenceModal');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    document.getElementById('reasonSection').classList.add('hidden');
+    names.forEach((el, i) => {
+        const name = el.value.trim();
+        const prof = profs[i].value.trim();
+        if (name) {
+            // نحافظ على عدد الغيابات إذا كانت المادة موجودة مسبقاً
+            const old = appData.courses.find(c => c.name === name);
+            newCourses.push({
+                name,
+                prof: prof || "دكتور مجهول",
+                day: el.dataset.day,
+                absences: old ? old.absences : 0,
+                reasons: old ? old.reasons : []
+            });
+        }
+    });
+
+    if (newCourses.length === 0) return alert("لازم تضيف مادة واحدة على الأقل عشان نراقبك!");
+    
+    appData.courses = newCourses;
+    saveData();
+    renderDashboard();
+    showScreen('dashboard-view');
+    document.getElementById('reset-session').classList.remove('hidden');
+});
+
+// فتح شاشة تعديل الجدول من الداش بورد
+document.getElementById('edit-schedule-btn').addEventListener('click', () => {
+    renderScheduleInputs();
+    showScreen('setup-view');
+});
+
+// --- 5. لوحة التحكم والذكاء الاصطناعي (Dashboard & AI) ---
+function renderDashboard() {
+    document.getElementById('user-greeting').innerText = `يا هلا بـ ${appData.profile.name}`;
+    const container = document.getElementById('courses-container');
+    
+    let totalAbs = 0;
+    let totalRem = 0;
+
+    container.innerHTML = appData.courses.map((course, idx) => {
+        totalAbs += course.absences;
+        const remaining = Math.max(0, 4 - course.absences);
+        totalRem += remaining;
+        
+        const progressPerc = (course.absences / 4) * 100;
+        let colorClass = 'bg-safe';
+        if (course.absences >= 2) colorClass = 'bg-warning';
+        if (course.absences >= 4) colorClass = 'bg-danger';
+
+        return `
+            <div class="course-card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h4 style="font-weight: 700;">${course.name}</h4>
+                        <p style="font-size: 0.7rem; color: var(--text-muted);">${course.day} | د. ${course.prof}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-weight: 900; font-size: 1.2rem; color: ${course.absences >= 4 ? 'var(--danger)' : 'inherit'}">${course.absences}</span>
+                        <p style="font-size: 0.6rem; opacity: 0.6;">غـيـاب</p>
+                    </div>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar ${colorClass}" style="width: ${Math.min(progressPerc, 100)}%"></div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.7rem; font-weight: 700; color: ${course.absences >= 4 ? 'var(--danger)' : 'var(--text-muted)'}">
+                        ${course.absences >= 4 ? "وضعية الحرمان 💀" : `باقي لك ${remaining} فرص`}
+                    </span>
+                    <button onclick="openAbsenceModal(${idx})" class="btn-primary" style="width: auto; padding: 0.5rem 1rem; font-size: 0.7rem;">تسجيل غياب</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('total-absences').innerText = totalAbs;
+    document.getElementById('remaining-credit').innerText = totalRem;
+    
+    updateSmartBanner(totalRem);
 }
 
-function askReason(instructorTookAttendance) {
-    if (!instructorTookAttendance) {
-        alert("رزقك جاك! ما دام ما حضّر الدكتور، كأنك حضرت وزيادة. ارجع لبيتك.");
-        closeModal();
+// تحليل البيانات وتحديث البانر (نشرة المستهترين)
+function updateSmartBanner(totalRem) {
+    const title = document.getElementById('ai-title');
+    const msg = document.getElementById('ai-message');
+    const numCourses = appData.courses.length;
+
+    if (totalRem === 0) {
+        title.innerText = "انتهت الحلول.. 💀";
+        msg.innerText = "رصيدك صفر. لو غبت محاضرة ثانية، الدكتور بيحذفك من الكوكب مش بس الكشف.";
+    } else if (totalRem >= numCourses) {
+        title.innerText = "وضع الهروب الكبير! 🏃‍♂️";
+        msg.innerText = "رصيدك ممتاز. تقدر تغيب الأسبوع القادم كاملاً وتعتكف في الكافيه، ربي ستر عليك.";
     } else {
-        document.getElementById('reasonSection').classList.remove('hidden', 'screen-fade-in');
-        document.getElementById('reasonSection').classList.add('screen-fade-in');
+        title.innerText = "خلك ذكي.. ⚖️";
+        msg.innerText = `ما تقدر تغيب الأسبوع كامل، لكن تقدر "تزلب" ${totalRem} محاضرات بس. اختر ضحاياك بعناية!`;
     }
 }
 
-function finalizeAbsence() {
-    const reason = document.getElementById('absenceReason').value;
-    const course = appData.courses[currentCourseIndex];
+// --- 6. منطق تسجيل الغياب (Absence Modal) ---
+let activeCourseIdx = null;
+
+function openAbsenceModal(idx) {
+    activeCourseIdx = idx;
+    document.getElementById('absence-modal').classList.remove('hidden');
+    document.getElementById('reason-selection').classList.add('hidden');
+}
+
+document.getElementById('btn-no-attendance').addEventListener('click', () => {
+    alert("رزقك جاك! ما دام ما حضّر الدكتور، كأنك حضرت وزيادة. روح اشرب شاي عدني.");
+    closeModal();
+});
+
+document.getElementById('btn-took-attendance').addEventListener('click', () => {
+    document.getElementById('reason-selection').classList.remove('hidden');
+});
+
+document.getElementById('confirm-absence').addEventListener('click', () => {
+    const reason = document.getElementById('absence-reason').value;
+    const course = appData.courses[activeCourseIdx];
     
     course.absences += 1;
     course.reasons.push(reason);
     
-    saveAndRefresh();
+    saveData();
+    renderDashboard();
     closeModal();
-    
+
     if (course.absences === 4) {
-        alert("رسمياً: وصلت للخط الأحمر. المرة الجاية بتشوف الدكتور في الأحلام بس.");
+        alert("⚠️ رسمياً: وصلت للخط الأحمر في هذه المادة. المرة الجاية بتشوف الدكتور في الأحلام بس.");
+    }
+});
+
+function closeModal() {
+    document.getElementById('absence-modal').classList.add('hidden');
+}
+
+// --- 7. وظائف عامة (إعادة ضبط وحفظ) ---
+function saveData() {
+    localStorage.setItem('gyabi_data', JSON.stringify(appData));
+}
+
+function confirmReset() {
+    if (confirm("هل أنت متأكد؟ سيتم تصفير كل شيء لبدء فصل دراسي جديد. لا يمكن التراجع!")) {
+        localStorage.removeItem('gyabi_data');
+        location.reload();
     }
 }
 
-function closeModal() {
-    document.getElementById('absenceModal').classList.add('hidden');
-    document.getElementById('absenceModal').classList.remove('flex');
-}
-
-// --- 5. الإحصائيات (Statistics) ---
-function showStats() {
-    navigateTo('statsScreen');
-    const total = appData.courses.reduce((sum, c) => sum + c.absences, 0);
-    const slackingReasons = ['chilling', 'sleep'];
-    
-    let slackCount = 0;
-    appData.courses.forEach(c => {
-        c.reasons.forEach(r => { if(slackingReasons.includes(r)) slackCount++; });
-    });
-
-    const slackPercent = total > 0 ? Math.round((slackCount / total) * 100) : 0;
-    
-    let comment = "بداية جادة.. شكلنا بنشوفك معيد بالكلية.";
-    if (slackPercent > 40) comment = "أنت تنافس على لقب زبون الكافيه المثالي.. الجامعة مش لك.";
-    if (total > 12) comment = "سجل غياباتك أطول من السيرة الذاتية لعميد الكلية.";
-
-    document.getElementById('statsResult').innerHTML = `
-        <div class="p-4 bg-blue-50 rounded-xl mb-4 border border-blue-100">
-            <p class="text-sm text-blue-800">إجمالي الغيابات</p>
-            <p class="text-3xl font-bold">${total}</p>
-        </div>
-        <div class="p-4 bg-red-50 rounded-xl border border-red-100">
-            <p class="text-sm text-red-800">نسبة "التسليت" الصافي</p>
-            <p class="text-3xl font-bold">${slackPercent}%</p>
-        </div>
-    `;
-    document.getElementById('sarcasticComment').innerText = comment;
-}
-
-// --- 6. الوظائف المساعدة ---
-function saveAndRefresh() {
-    localStorage.setItem('hu_tracker', JSON.stringify(appData));
-    renderCourseCards();
-}
+document.getElementById('reset-session').addEventListener('click', confirmReset);
