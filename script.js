@@ -1,12 +1,13 @@
-// --- 1. إعداد البيانات الأساسية ---
-let appData = JSON.parse(localStorage.getItem('gyabi_data')) || null;
+// --- 1. إدارة البيانات والتهيئة ---
+let appData = JSON.parse(localStorage.getItem('gyabi_v2_data')) || null;
+let activeCourseIdx = null;
 
 // تشغيل التطبيق عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     if (appData) {
-        renderDashboard();
         showScreen('dashboard-view');
+        renderDashboard();
         document.getElementById('reset-session').classList.remove('hidden');
     } else {
         showScreen('onboarding-view');
@@ -15,14 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // دالة التنقل بين الشاشات
 function showScreen(screenId) {
-    const screens = ['onboarding-view', 'setup-view', 'dashboard-view'];
-    screens.forEach(id => {
-        document.getElementById(id).classList.add('hidden');
-    });
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     document.getElementById(screenId).classList.remove('hidden');
+    window.scrollTo(0, 0);
 }
 
-// --- 2. إدارة الوضع الليلي ---
+// --- 2. نظام الوضع الليلي ---
 function initTheme() {
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark-mode');
@@ -37,10 +36,10 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
     document.getElementById('theme-toggle').innerText = isDark ? '☀️' : '🌙';
 });
 
-// --- 3. إعداد الحساب لأول مرة (Onboarding) ---
+// --- 3. تسجيل الدخول لأول مرة (Onboarding) ---
 document.getElementById('start-app').addEventListener('click', () => {
     const name = document.getElementById('input-user-name').value.trim();
-    if (!name) return alert("سجل اسمك يا دكتور، بلاش استعجال!");
+    if (!name) return alert("سجل اسمك يا دكتور أولاً!");
 
     appData = {
         profile: {
@@ -55,20 +54,20 @@ document.getElementById('start-app').addEventListener('click', () => {
     showScreen('setup-view');
 });
 
-// --- 4. إعداد وتعديل الجدول ---
+// --- 4. إعداد وتعديل الجدول الدراسي ---
 function renderScheduleInputs() {
     const days = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
     const container = document.getElementById('days-inputs-container');
+    
     container.innerHTML = days.map(day => {
-        // إذا كان هناك بيانات سابقة للمواد في هذا اليوم، نعرضها
         const existing = appData.courses.filter(c => c.day === day);
         return `
-            <div class="day-input-group" style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
-                <h4 style="margin-bottom: 0.5rem; color: var(--primary); font-weight: 900;">📍 يوم ${day}</h4>
-                ${[0, 1, 2].map(i => `
-                    <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                        <input type="text" class="course-name-in" data-day="${day}" placeholder="اسم المادة" value="${existing[i]?.name || ''}">
-                        <input type="text" class="prof-name-in" placeholder="اسم الدكتور" value="${existing[i]?.prof || ''}">
+            <div class="day-group" style="margin-bottom: 2rem;">
+                <h4 style="color: var(--primary-blue); margin-bottom: 0.8rem;">📅 يوم ${day}</h4>
+                ${[0, 1].map(i => `
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 0.6rem;">
+                        <input type="text" class="c-name-in" data-day="${day}" placeholder="اسم المادة" value="${existing[i]?.name || ''}">
+                        <input type="text" class="p-name-in" placeholder="الدكتور" value="${existing[i]?.prof || ''}">
                     </div>
                 `).join('')}
             </div>
@@ -76,157 +75,139 @@ function renderScheduleInputs() {
     }).join('');
 }
 
-document.getElementById('save-setup').addEventListener('click', () => {
-    const names = document.querySelectorAll('.course-name-in');
-    const profs = document.querySelectorAll('.prof-name-in');
+document.getElementById('save-schedule').addEventListener('click', () => {
+    const names = document.querySelectorAll('.c-name-in');
+    const profs = document.querySelectorAll('.p-name-in');
     const newCourses = [];
 
     names.forEach((el, i) => {
         const name = el.value.trim();
         const prof = profs[i].value.trim();
         if (name) {
-            // نحافظ على عدد الغيابات إذا كانت المادة موجودة مسبقاً
-            const old = appData.courses.find(c => c.name === name);
+            // التحقق إذا كانت المادة موجودة مسبقاً للحفاظ على غياباتها عند التعديل
+            const oldCourse = appData.courses.find(c => c.name === name);
             newCourses.push({
                 name,
-                prof: prof || "دكتور مجهول",
+                prof: prof || "دكتور غير محدد",
                 day: el.dataset.day,
-                absences: old ? old.absences : 0,
-                reasons: old ? old.reasons : []
+                absences: oldCourse ? oldCourse.absences : 0,
+                reasons: oldCourse ? oldCourse.reasons : []
             });
         }
     });
 
-    if (newCourses.length === 0) return alert("لازم تضيف مادة واحدة على الأقل عشان نراقبك!");
+    if (newCourses.length === 0) return alert("أدخل مادة واحدة على الأقل!");
     
     appData.courses = newCourses;
-    saveData();
-    renderDashboard();
+    saveAndRefresh();
     showScreen('dashboard-view');
     document.getElementById('reset-session').classList.remove('hidden');
 });
 
-// فتح شاشة تعديل الجدول من الداش بورد
 document.getElementById('edit-schedule-btn').addEventListener('click', () => {
     renderScheduleInputs();
     showScreen('setup-view');
 });
 
-// --- 5. لوحة التحكم والذكاء الاصطناعي (Dashboard & AI) ---
+// --- 5. لوحة التحكم (Dashboard) ---
 function renderDashboard() {
     document.getElementById('user-greeting').innerText = `يا هلا بـ ${appData.profile.name}`;
-    const container = document.getElementById('courses-container');
+    document.getElementById('user-subtext').innerText = `${appData.profile.dept} - مستوى ${appData.profile.level}`;
     
-    let totalAbs = 0;
-    let totalRem = 0;
+    const container = document.getElementById('courses-container');
+    document.getElementById('quick-stats').classList.remove('hidden');
 
+    let totalAbs = 0;
     container.innerHTML = appData.courses.map((course, idx) => {
         totalAbs += course.absences;
-        const remaining = Math.max(0, 4 - course.absences);
-        totalRem += remaining;
-        
-        const progressPerc = (course.absences / 4) * 100;
-        let colorClass = 'bg-safe';
-        if (course.absences >= 2) colorClass = 'bg-warning';
-        if (course.absences >= 4) colorClass = 'bg-danger';
+        const progress = (course.absences / 4) * 100;
+        let barColor = 'bg-safe';
+        if (course.absences >= 2) barColor = 'bg-warn';
+        if (course.absences >= 4) barColor = 'bg-danger';
 
         return `
             <div class="course-card">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div class="section-header" style="margin-bottom: 0.5rem;">
                     <div>
-                        <h4 style="font-weight: 700;">${course.name}</h4>
-                        <p style="font-size: 0.7rem; color: var(--text-muted);">${course.day} | د. ${course.prof}</p>
+                        <h4 style="font-weight: 700; font-size: 1.1rem;">${course.name}</h4>
+                        <p class="text-muted" style="font-size: 0.75rem;">${course.day} • د. ${course.prof}</p>
                     </div>
-                    <div style="text-align: right;">
-                        <span style="font-weight: 900; font-size: 1.2rem; color: ${course.absences >= 4 ? 'var(--danger)' : 'inherit'}">${course.absences}</span>
-                        <p style="font-size: 0.6rem; opacity: 0.6;">غـيـاب</p>
+                    <div style="text-align: left;">
+                        <span style="font-size: 1.5rem; font-weight: 900; ${course.absences >= 4 ? 'color: var(--color-danger)' : ''}">${course.absences}</span>
+                        <span class="text-muted" style="font-size: 0.7rem; display: block;">/ 4 غيابات</span>
                     </div>
                 </div>
                 
                 <div class="progress-container">
-                    <div class="progress-bar ${colorClass}" style="width: ${Math.min(progressPerc, 100)}%"></div>
+                    <div class="progress-bar ${barColor}" style="width: ${Math.min(progress, 100)}%"></div>
                 </div>
 
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 0.7rem; font-weight: 700; color: ${course.absences >= 4 ? 'var(--danger)' : 'var(--text-muted)'}">
-                        ${course.absences >= 4 ? "وضعية الحرمان 💀" : `باقي لك ${remaining} فرص`}
+                    <span style="font-size: 0.8rem; font-weight: 700; color: ${course.absences >= 4 ? 'var(--color-danger)' : 'var(--text-secondary)'}">
+                        ${course.absences >= 4 ? "حرمان 💀" : `متبقي: ${4 - course.absences}`}
                     </span>
-                    <button onclick="openAbsenceModal(${idx})" class="btn-primary" style="width: auto; padding: 0.5rem 1rem; font-size: 0.7rem;">تسجيل غياب</button>
+                    <button onclick="openAbsenceModal(${idx}, '${course.name}')" class="btn-primary" style="width: auto; padding: 0.6rem 1.2rem; font-size: 0.8rem;">تسجيل غياب</button>
                 </div>
             </div>
         `;
     }).join('');
 
     document.getElementById('total-absences').innerText = totalAbs;
-    document.getElementById('remaining-credit').innerText = totalRem;
-    
-    updateSmartBanner(totalRem);
+    const totalPossible = appData.courses.length * 4;
+    document.getElementById('remaining-credit').innerText = Math.max(0, totalPossible - totalAbs);
 }
 
-// تحليل البيانات وتحديث البانر (نشرة المستهترين)
-function updateSmartBanner(totalRem) {
-    const title = document.getElementById('ai-title');
-    const msg = document.getElementById('ai-message');
-    const numCourses = appData.courses.length;
-
-    if (totalRem === 0) {
-        title.innerText = "انتهت الحلول.. 💀";
-        msg.innerText = "رصيدك صفر. لو غبت محاضرة ثانية، الدكتور بيحذفك من الكوكب مش بس الكشف.";
-    } else if (totalRem >= numCourses) {
-        title.innerText = "وضع الهروب الكبير! 🏃‍♂️";
-        msg.innerText = "رصيدك ممتاز. تقدر تغيب الأسبوع القادم كاملاً وتعتكف في الكافيه، ربي ستر عليك.";
-    } else {
-        title.innerText = "خلك ذكي.. ⚖️";
-        msg.innerText = `ما تقدر تغيب الأسبوع كامل، لكن تقدر "تزلب" ${totalRem} محاضرات بس. اختر ضحاياك بعناية!`;
-    }
-}
-
-// --- 6. منطق تسجيل الغياب (Absence Modal) ---
-let activeCourseIdx = null;
-
-function openAbsenceModal(idx) {
+// --- 6. نظام تسجيل الغياب (Modal Logic) ---
+function openAbsenceModal(idx, name) {
     activeCourseIdx = idx;
+    document.getElementById('modal-course-name').innerText = name;
     document.getElementById('absence-modal').classList.remove('hidden');
     document.getElementById('reason-selection').classList.add('hidden');
+    document.getElementById('attendance-check').classList.remove('hidden');
 }
 
 document.getElementById('btn-no-attendance').addEventListener('click', () => {
-    alert("رزقك جاك! ما دام ما حضّر الدكتور، كأنك حضرت وزيادة. روح اشرب شاي عدني.");
-    closeModal();
+    alert("الحمد لله! ما دام الدكتور ما حضّر، وضعك في السليم. استمتع بيومك.");
+    closeAbsenceModal();
 });
 
 document.getElementById('btn-took-attendance').addEventListener('click', () => {
+    document.getElementById('attendance-check').classList.add('hidden');
     document.getElementById('reason-selection').classList.remove('hidden');
 });
 
 document.getElementById('confirm-absence').addEventListener('click', () => {
     const reason = document.getElementById('absence-reason').value;
-    const course = appData.courses[activeCourseIdx];
-    
-    course.absences += 1;
-    course.reasons.push(reason);
-    
-    saveData();
-    renderDashboard();
-    closeModal();
+    appData.courses[activeCourseIdx].absences += 1;
+    appData.courses[activeCourseIdx].reasons.push({
+        date: new Date().toLocaleDateString('ar-YE'),
+        reason: reason
+    });
 
-    if (course.absences === 4) {
-        alert("⚠️ رسمياً: وصلت للخط الأحمر في هذه المادة. المرة الجاية بتشوف الدكتور في الأحلام بس.");
+    saveAndRefresh();
+    closeAbsenceModal();
+
+    if (appData.courses[activeCourseIdx].absences === 4) {
+        alert("⚠️ تنبيه: وصلت للحد الأقصى للغياب في هذه المادة (حرمان).");
     }
 });
 
-function closeModal() {
+function closeAbsenceModal() {
     document.getElementById('absence-modal').classList.add('hidden');
 }
 
-// --- 7. وظائف عامة (إعادة ضبط وحفظ) ---
-function saveData() {
-    localStorage.setItem('gyabi_data', JSON.stringify(appData));
+document.getElementById('close-modal').addEventListener('click', closeAbsenceModal);
+
+// --- 7. الوظائف المساعدة (إعادة الضبط والحفظ) ---
+function saveAndRefresh() {
+    localStorage.setItem('gyabi_v2_data', JSON.stringify(appData));
+    renderDashboard();
 }
 
 function confirmReset() {
-    if (confirm("هل أنت متأكد؟ سيتم تصفير كل شيء لبدء فصل دراسي جديد. لا يمكن التراجع!")) {
-        localStorage.removeItem('gyabi_data');
+    const check = confirm("هل أنت متأكد؟ سيتم حذف جميع الغيابات والجدول لبدء فصل دراسي جديد. هذا الإجراء لا يمكن التراجع عنه!");
+    if (check) {
+        localStorage.removeItem('gyabi_v2_data');
         location.reload();
     }
 }
