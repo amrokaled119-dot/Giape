@@ -5,115 +5,134 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>غيابي</title>
 </head>
-<body class="bg-light">
+<body>
 
     <header id="main-header" class="fixed-top">
         <div class="header-content">
             <div class="logo">
-                <span class="logo-icon">🎓</span>
+                <div class="logo-box">غ</div>
                 <h1 class="brand-name">غيابي</h1>
             </div>
             <div class="header-actions">
-                <button id="theme-toggle" title="تبديل الوضع">🌙</button>
-                <button id="reset-session" class="btn-reset" title="بدء فصل جديد">🔄</button>
+                <button id="theme-toggle" class="icon-btn" title="تبديل الوضع">🌙</button>
+                <button id="reset-session" class="icon-btn btn-reset hidden" title="بدء فصل جديد">🔄</button>
             </div>
         </div>
     </header>
 
     <main class="app-container">
 
-        <section id="smart-alert-banner" class="banner-box">
-            <div class="banner-header">
-                <span class="status-dot"></span>
-                <span class="banner-label">تحليل رصيد الغياب</span>
-            </div>
-            <div class="banner-body">
-                <h2 id="ai-title">جاري تحليل بياناتك...</h2>
-                <p id="ai-message">سأخبرك هنا إذا كان بإمكانك غياب الأسبوع القادم كاملاً أم لا.</p>
-            </div>
-        </section>
-
-        <section id="quick-stats" class="stats-grid">
+        <section id="quick-stats" class="stats-grid hidden">
             <div class="stat-card">
-                <span class="stat-label">إجمالي الغياب</span>
+                <span class="stat-label">إجمالي أيام الغياب</span>
                 <h3 id="total-absences">0</h3>
             </div>
             <div class="stat-card">
-                <span class="stat-label">رصيد الأمان المتبقي</span>
-                <h3 id="remaining-credit" class="text-safe">0</h3>
+                <span class="stat-label">الرصيد المتاح (كلي)</span>
+                <h3 id="remaining-credit">0</h3>
             </div>
         </section>
 
-        <section id="dashboard-view" class="active-screen">
+        <section id="dashboard-view" class="screen hidden">
             <div class="section-header">
-                <h3 id="user-greeting">أهلاً بك</h3>
-                <button id="edit-schedule-btn" class="btn-link">تعديل الجدول ⚙️</button>
+                <div class="user-info">
+                    <h2 id="user-greeting">أهلاً بك</h2>
+                    <p id="user-subtext" class="text-muted"></p>
+                </div>
+                <button id="edit-schedule-btn" class="edit-btn">تعديل الجدول ⚙️</button>
             </div>
             
             <div id="courses-container" class="courses-list">
                 </div>
         </section>
 
-        <section id="setup-view" class="modal-overlay hidden">
-            <div class="setup-card">
-                <h2>إعداد الجدول الدراسي</h2>
-                <p>يمكنك إضافة أو تعديل المواد والدكاترة لكل يوم</p>
+        <section id="setup-view" class="screen hidden">
+            <div class="form-card">
+                <div class="form-header">
+                    <h2>إعداد الجدول الدراسي</h2>
+                    <p>أدخل أسماء المواد والدكاترة (مادتين لكل يوم كحد أقصى)</p>
+                </div>
                 
                 <div id="days-inputs-container">
                     </div>
 
-                <button id="save-setup" class="btn-primary">حفظ التغييرات</button>
+                <div class="form-footer">
+                    <button id="save-schedule" class="btn-primary">حفظ الجدول والبدء</button>
+                </div>
             </div>
         </section>
 
-        <section id="onboarding-view" class="modal-overlay hidden">
+        <section id="onboarding-view" class="screen">
             <div class="onboarding-card">
-                <h2>أهلاً يا دكتور المستقبل</h2>
-                <p>سجل بياناتك الأساسية لنبدأ</p>
-                <input type="text" id="input-user-name" placeholder="الاسم الرباعي">
-                <select id="select-dept">
-                    <option value="إدارة أعمال">إدارة أعمال</option>
-                    <option value="التسويق">التسويق</option>
-                    <option value="المالية والمصرفية">المالية والمصرفية</option>
-                    <option value="المحاسبة">المحاسبة</option>
-                </select>
-                <select id="select-level">
-                    <option value="1">المستوى الأول</option>
-                    <option value="2">المستوى الثاني</option>
-                    <option value="3">المستوى الثالث</option>
-                    <option value="4">المستوى الرابع</option>
-                </select>
-                <button id="start-app" class="btn-primary">متابعة</button>
+                <div class="onboarding-icon">🎓</div>
+                <h2>مرحباً بك في غيابي</h2>
+                <p>سجل بياناتك للبدء في تتبع محاضراتك في كلية العلوم الإدارية</p>
+                
+                <div class="input-group">
+                    <label>الاسم الكامل</label>
+                    <input type="text" id="input-user-name" placeholder="أدخل اسمك هنا">
+                </div>
+
+                <div class="grid-inputs">
+                    <div class="input-group">
+                        <label>القسم</label>
+                        <select id="select-dept">
+                            <option value="إدارة أعمال">إدارة أعمال</option>
+                            <option value="التسويق">التسويق</option>
+                            <option value="المالية والمصرفية">المالية والمصرفية</option>
+                            <option value="المحاسبة">المحاسبة</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>المستوى</label>
+                        <select id="select-level">
+                            <option value="1">المستوى 1</option>
+                            <option value="2">المستوى 2</option>
+                            <option value="3">المستوى 3</option>
+                            <option value="4">المستوى 4</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button id="start-app" class="btn-primary">دخول التطبيق</button>
             </div>
         </section>
 
         <div id="absence-modal" class="modal-overlay hidden">
-            <div class="modal-content">
-                <h3>تسجيل غياب اليوم</h3>
-                <p>هل قام الدكتور بتحضير الأسماء؟</p>
-                <div class="modal-actions">
-                    <button id="btn-took-attendance" class="btn-danger">نعم، غدر بنا</button>
-                    <button id="btn-no-attendance" class="btn-secondary">لا، لم يحضر</button>
+            <div class="modal-box">
+                <div class="modal-header">
+                    <h3>تسجيل حالة غياب</h3>
+                    <p>مادة: <span id="modal-course-name">--</span></p>
+                </div>
+                
+                <div id="attendance-check">
+                    <p class="question">هل قام الدكتور بتحضير الغياب؟</p>
+                    <div class="modal-actions">
+                        <button id="btn-took-attendance" class="btn-danger">نعم، تم التحضير</button>
+                        <button id="btn-no-attendance" class="btn-secondary">لا، لم يحضر</button>
+                    </div>
                 </div>
                 
                 <div id="reason-selection" class="hidden">
-                    <label>اختر السبب (بصراحة):</label>
+                    <p class="question">ما هو سبب الغياب؟</p>
                     <select id="absence-reason">
-                        <option value="medical">عذر طبي</option>
-                        <option value="transport">المواصلات</option>
-                        <option value="chilling">تسلكع في الكافيه</option>
+                        <option value="chilling">تسلكع (كافيه)</option>
                         <option value="sleep">النوم سلطان</option>
-                        <option value="useful">شغلة مفيدة</option>
+                        <option value="medical">ظرف صحي</option>
+                        <option value="transport">المواصلات</option>
+                        <option value="other">سبب آخر</option>
                     </select>
                     <button id="confirm-absence" class="btn-primary">تأكيد الغياب</button>
                 </div>
+                
+                <button id="close-modal" class="btn-close">إلغاء</button>
             </div>
         </div>
 
     </main>
 
-    <footer class="main-footer">
-        <p>جميع الحقوق محفوظة لطلبة كلية العلوم الإدارية - جامعة حضرموت</p>
+    <footer class="app-footer">
+        <p>غيابي &copy; 2026 - جامعة حضرموت</p>
     </footer>
 
 </body>
