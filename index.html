@@ -3,158 +3,361 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>غيابي</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>غيابي - نظام إدارة الهروب الجامعي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0f172a',
+                        darkCard: '#1e293b'
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; --primary: #2563eb;
-        }
-        body.dark-mode {
-            --bg: #0f172a; --card: #1e293b; --text: #f8fafc;
-        }
-        * { font-family: 'Tajawal', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--bg); color: var(--text); transition: 0.3s; line-height: 1.6; padding-top: 80px; }
-        
-        /* أهم قاعدة لحل مشكلتك */
-        .hidden { display: none !important; }
-        
-        header { position: fixed; top: 0; width: 100%; background: var(--card); border-bottom: 1px solid #ddd; padding: 1rem; z-index: 1000; display: flex; justify-content: space-between; align-items: center; }
-        .app-container { max-width: 500px; margin: 0 auto; padding: 1rem; }
-        .card { background: var(--card); padding: 2rem; border-radius: 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 1rem; }
-        .btn-primary { background: var(--primary); color: white; border: none; padding: 1rem; border-radius: 1rem; width: 100%; font-weight: bold; cursor: pointer; margin-top: 1rem; }
-        input, select { width: 100%; padding: 0.8rem; margin: 0.5rem 0; border-radius: 0.8rem; border: 1px solid #ddd; background: var(--bg); color: var(--text); }
-        .course-card { background: var(--card); padding: 1.5rem; border-radius: 1.5rem; border: 1px solid #eee; margin-bottom: 1rem; }
-        .progress-bar { height: 10px; background: #eee; border-radius: 10px; margin: 10px 0; overflow: hidden; }
-        .progress-fill { height: 100%; transition: 0.5s; }
+        body { font-family: 'Tajawal', sans-serif; transition: all 0.3s ease; }
+        .glass-header { backdrop-filter: blur(12px); background: rgba(255, 255, 255, 0.85); }
+        .dark .glass-header { background: rgba(15, 23, 42, 0.85); }
+        .screen { display: none; }
+        .screen.active { display: block; animation: slideUp 0.4s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .progress-bar { transition: width 1s ease-in-out; }
     </style>
 </head>
-<body>
+<body class="bg-slate-50 dark:bg-darkBg text-slate-900 dark:text-slate-100 min-h-screen">
 
-    <header>
-        <div style="display:flex; align-items:center; gap:10px;">
-            <div style="background:var(--primary); color:white; width:35px; height:35px; border-radius:8px; display:grid; place-items:center; font-weight:900;">غ</div>
-            <h1 style="font-size:1.2rem; font-weight:900;">غيابي</h1>
+    <header class="fixed top-0 w-full z-50 glass-header border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black italic">غ</div>
+            <h1 class="text-xl font-black tracking-tight">غيابي</h1>
         </div>
-        <div>
-            <button onclick="toggleTheme()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">🌙</button>
-            <button id="reset-session" class="hidden" onclick="resetAll()" style="color:red; background:none; border:none; font-size:1.2rem; cursor:pointer;">🔄</button>
+        <div class="flex items-center gap-2">
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-gray-100 dark:bg-slate-800 transition-colors">
+                <span id="darkIcon">🌙</span>
+            </button>
+            <button id="resetBtn" onclick="confirmReset()" class="p-2.5 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 hidden" title="فصل جديد">
+                🔄
+            </button>
         </div>
     </header>
 
-    <main class="app-container">
-        <section id="onboarding-view" class="card">
-            <h2 style="margin-bottom:1rem;">مرحباً بك في غيابي</h2>
-            <p style="font-size:0.9rem; color:#666; margin-bottom:1.5rem;">سجل بياناتك للبدء في تتبع محاضراتك بكلية العلوم الإدارية</p>
-            <input type="text" id="user-name" placeholder="الاسم الكامل">
-            <select id="user-dept">
-                <option>إدارة أعمال</option><option>التسويق</option><option>المالية</option><option>المحاسبة</option>
-            </select>
-            <button class="btn-primary" onclick="startApp()">دخول التطبيق</button>
-        </section>
+    <main class="pt-24 pb-20 px-4 max-w-xl mx-auto">
 
-        <section id="setup-view" class="hidden">
-            <h2 style="margin-bottom:1rem;">إعداد الجدول الدراسي</h2>
-            <div id="days-container"></div>
-            <button class="btn-primary" onclick="saveSchedule()">حفظ الجدول والبدء</button>
-        </section>
-
-        <section id="dashboard-view" class="hidden">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <div>
-                    <h2 id="hello-user">أهلاً بك</h2>
-                    <p id="user-info" style="font-size:0.8rem; color:#666;"></p>
+        <div id="onboarding" class="screen active">
+            <div class="bg-white dark:bg-darkCard p-8 rounded-[2.5rem] shadow-xl border border-gray-100 dark:border-gray-800 text-center">
+                <div class="mb-6">
+                    <div class="inline-block p-4 bg-blue-50 dark:bg-blue-900/20 rounded-full mb-4">
+                        <span class="text-4xl">🎓</span>
+                    </div>
+                    <h2 class="text-2xl font-black mb-2">أهلاً يا دكتور المستقبل</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm">جامعة حضرموت - العلوم الإدارية</p>
                 </div>
-                <button onclick="editSchedule()" style="color:var(--primary); font-size:0.8rem; border:none; background:none; cursor:pointer;">تعديل الجدول ⚙️</button>
+                
+                <div class="space-y-4">
+                    <input type="text" id="userName" placeholder="اسمك الكامل" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-blue-500 outline-none">
+                    <div class="grid grid-cols-2 gap-4">
+                        <select id="userDept" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-none">
+                            <option>إدارة أعمال</option><option>التسويق</option><option>المالية</option><option>المحاسبة</option>
+                        </select>
+                        <select id="userLevel" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-none">
+                            <option>مستوى 1</option><option>مستوى 2</option><option>مستوى 3</option><option>مستوى 4</option>
+                        </select>
+                    </div>
+                    <button onclick="saveProfile()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-600/30">ابدأ الرحلة</button>
+                </div>
             </div>
-            <div id="courses-list"></div>
-        </section>
+        </div>
+
+        <div id="scheduleSetup" class="screen">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-black">جدول محاضراتك</h2>
+                <span class="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-600 px-3 py-1 rounded-full font-bold">بحد أقصى مادتين يومياً</span>
+            </div>
+            <div id="daysContainer" class="space-y-4"></div>
+            <button onclick="saveSchedule()" class="w-full mt-8 bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg">حفظ ومتابعة</button>
+        </div>
+
+        <div id="dashboard" class="screen">
+            
+            <div id="smartBanner" class="mb-8 p-5 rounded-[2rem] bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-xl relative overflow-hidden">
+                <div class="relative z-10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="flex h-2 w-2 rounded-full bg-green-400 animate-pulse"></span>
+                        <span class="text-[10px] font-bold tracking-widest uppercase opacity-80">نشرة المستهترين</span>
+                    </div>
+                    <h3 id="smartTitle" class="text-lg font-black mb-1">تحليل الوضع..</h3>
+                    <p id="smartMsg" class="text-sm opacity-90 leading-relaxed font-medium">جاري حساب رصيد غياباتك المتاحة...</p>
+                </div>
+                <div class="absolute -right-4 -bottom-4 text-7xl opacity-10 rotate-12">📉</div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-white dark:bg-darkCard p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-sm">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase mb-1">الغياب الفعلي</p>
+                    <div class="flex items-baseline gap-1">
+                        <h4 id="totalAbsCount" class="text-3xl font-black">0</h4>
+                        <span class="text-xs text-slate-400">مرات</span>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-darkCard p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-sm">
+                    <p class="text-slate-400 text-[10px] font-bold uppercase mb-1">رصيد الأمان</p>
+                    <div class="flex items-baseline gap-1">
+                        <h4 id="totalRemCount" class="text-3xl font-black text-blue-600">0</h4>
+                        <span class="text-xs text-slate-400">باقي</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center mb-6 px-2">
+                <h3 class="font-bold text-slate-500">سجل المواد</h3>
+                <button onclick="editSchedule()" class="text-xs bg-slate-200 dark:bg-slate-800 px-4 py-2 rounded-full font-bold">تعديل الجدول ⚙️</button>
+            </div>
+
+            <div id="coursesList" class="space-y-4"></div>
+        </div>
+
     </main>
 
+    <div id="absenceModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-end sm:items-center justify-center p-4 z-[100]">
+        <div class="bg-white dark:bg-darkCard w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl animate-slideUp">
+            <div class="text-center mb-6">
+                <div class="w-16 h-1 w-12 bg-slate-200 dark:bg-slate-700 mx-auto rounded-full mb-6"></div>
+                <h3 class="text-xl font-black mb-2 text-blue-600">لحظة الحقيقة ✋</h3>
+                <p class="text-slate-500 text-sm">هل الدكتور حضّر الأسماء وغدر بكم؟</p>
+            </div>
+            
+            <div id="modalSteps">
+                <div id="step1" class="space-y-3">
+                    <button onclick="handleStep(true)" class="w-full bg-red-500 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-500/20">نعم، غدر بنا</button>
+                    <button onclick="handleStep(false)" class="w-full bg-slate-100 dark:bg-slate-800 py-4 rounded-2xl font-bold">لا، ربي ستر</button>
+                </div>
+                <div id="step2" class="hidden space-y-4">
+                    <select id="absReason" class="w-full p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 border-none font-bold">
+                        <option value="chilling">تسلكع (كافيه الكلية)</option>
+                        <option value="sleep">النوم سلطان</option>
+                        <option value="medical">عذر طبي (وهمي)</option>
+                        <option value="transport">المواصلات (زحمة)</option>
+                        <option value="useful">شغلة مهمة فعلاً</option>
+                    </select>
+                    <button onclick="confirmAbsence()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold">تأكيد الكارثة</button>
+                </div>
+            </div>
+            <button onclick="closeModal()" class="w-full mt-4 text-slate-400 text-xs font-bold uppercase tracking-widest">إغلاق</button>
+        </div>
+    </div>
+
     <script>
-        let data = JSON.parse(localStorage.getItem('gyabi_v3')) || null;
+        // --- DATA ARCHITECTURE ---
+        let appData = JSON.parse(localStorage.getItem('gyabi_v2')) || null;
+        let selectedCourseIdx = null;
 
         window.onload = () => {
-            if(data) {
-                showScreen('dashboard-view');
-                renderDashboard();
-                document.getElementById('reset-session').classList.remove('hidden');
+            applyTheme();
+            if (appData) {
+                showDashboard();
+                document.getElementById('resetBtn').classList.remove('hidden');
             }
         };
 
-        function showScreen(id) {
-            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden');
+        function navigateTo(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            window.scrollTo(0,0);
         }
 
-        function toggleTheme() {
-            document.body.classList.toggle('dark-mode');
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('gyabi_theme', document.documentElement.classList.contains('dark'));
+            document.getElementById('darkIcon').innerText = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
         }
 
-        function startApp() {
-            const name = document.getElementById('user-name').value;
-            if(!name) return alert("سجل اسمك!");
-            data = { profile: {name, dept: document.getElementById('user-dept').value}, courses: [] };
-            renderSetup();
-            showScreen('setup-view');
+        function applyTheme() {
+            if (localStorage.getItem('gyabi_theme') === 'true') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('darkIcon').innerText = '☀️';
+            }
         }
 
-        function renderSetup() {
+        // --- SETUP LOGIC ---
+        function saveProfile() {
+            const name = document.getElementById('userName').value.trim();
+            if(!name) return alert("سجل اسمك يا دكتور!");
+            appData = {
+                profile: { name, dept: document.getElementById('userDept').value, level: document.getElementById('userLevel').value },
+                courses: []
+            };
+            renderInputs();
+            navigateTo('scheduleSetup');
+        }
+
+        function renderInputs() {
             const days = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
-            const container = document.getElementById('days-container');
-            container.innerHTML = days.map(day => `
-                <div class="card" style="padding:1rem; margin-bottom:0.5rem;">
-                    <h4 style="color:var(--primary); margin-bottom:10px;">${day}</h4>
-                    <input type="text" class="c-in" data-day="${day}" placeholder="اسم المادة">
-                    <input type="text" class="p-in" placeholder="اسم الدكتور">
-                </div>
-            `).join('');
-        }
-
-        function saveSchedule() {
-            const names = document.querySelectorAll('.c-in');
-            const profs = document.querySelectorAll('.p-in');
-            data.courses = [];
-            names.forEach((n, i) => {
-                if(n.value) data.courses.push({name: n.value, prof: profs[i].value, day: n.dataset.day, absences: 0});
-            });
-            localStorage.setItem('gyabi_v3', JSON.stringify(data));
-            renderDashboard();
-            showScreen('dashboard-view');
-            document.getElementById('reset-session').classList.remove('hidden');
-        }
-
-        function renderDashboard() {
-            document.getElementById('hello-user').innerText = `يا هلا ${data.profile.name}`;
-            document.getElementById('user-info').innerText = data.profile.dept;
-            const list = document.getElementById('courses-list');
-            list.innerHTML = data.courses.map((c, i) => {
-                const perc = (c.absences / 4) * 100;
-                const color = c.absences >= 4 ? 'red' : (c.absences >= 2 ? 'orange' : '#10b981');
+            const container = document.getElementById('daysContainer');
+            container.innerHTML = days.map(day => {
+                const dayCourses = appData.courses.filter(c => c.day === day);
                 return `
-                <div class="course-card">
-                    <div style="display:flex; justify-content:space-between;">
-                        <h4 style="font-weight:900;">${c.name}</h4>
-                        <span style="font-weight:900; color:${color}">${c.absences}/4</span>
+                <div class="bg-white dark:bg-darkCard p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800">
+                    <h4 class="font-bold text-blue-600 mb-4 flex items-center gap-2">📍 ${day}</h4>
+                    <div class="space-y-3">
+                        ${[0,1].map(i => `
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" placeholder="اسم المادة" value="${dayCourses[i]?.name || ''}" class="c-in p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-sm border-none">
+                                <input type="text" placeholder="اسم الدكتور" value="${dayCourses[i]?.prof || ''}" class="p-in p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-sm border-none">
+                            </div>
+                        `).join('')}
                     </div>
-                    <div class="progress-bar"><div class="progress-fill" style="width:${perc}%; background:${color}"></div></div>
-                    <button onclick="addAbsence(${i})" style="background:var(--bg); border:1px solid #ddd; padding:5px 10px; border-radius:8px; font-size:0.7rem; cursor:pointer;">تسجيل غياب +</button>
                 </div>`;
             }).join('');
         }
 
-        function addAbsence(i) {
-            if(data.courses[i].absences < 4) {
-                data.courses[i].absences++;
-                localStorage.setItem('gyabi_v3', JSON.stringify(data));
-                renderDashboard();
-            } else { alert("وصلت للحرمان في هذه المادة! 💀"); }
+        function saveSchedule() {
+            const days = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+            const cin = document.querySelectorAll('.c-in');
+            const pin = document.querySelectorAll('.p-in');
+            const newCourses = [];
+            let idx = 0;
+
+            days.forEach(day => {
+                for(let i=0; i<2; i++) {
+                    const name = cin[idx].value.trim();
+                    const prof = pin[idx].value.trim();
+                    if(name) {
+                        const existing = appData.courses.find(c => c.name === name);
+                        newCourses.push({
+                            name, prof, day,
+                            absences: existing ? existing.absences : 0,
+                            reasons: existing ? existing.reasons : []
+                        });
+                    }
+                    idx++;
+                }
+            });
+
+            if(newCourses.length === 0) return alert("سجل مادة واحدة على الأقل!");
+            appData.courses = newCourses;
+            sync();
+            showDashboard();
+            document.getElementById('resetBtn').classList.remove('hidden');
         }
 
-        function resetAll() {
-            if(confirm("بدء فصل جديد؟")) { localStorage.removeItem('gyabi_v3'); location.reload(); }
+        // --- DASHBOARD & SMART AI LOGIC ---
+        function showDashboard() {
+            navigateTo('dashboard');
+            renderDashboardCards();
+            updateSmartBanner();
         }
 
-        function editSchedule() { renderSetup(); showScreen('setup-view'); }
+        function renderDashboardCards() {
+            const list = document.getElementById('coursesList');
+            let totalAbs = 0;
+            let totalRem = 0;
+
+            list.innerHTML = appData.courses.map((c, i) => {
+                totalAbs += c.absences;
+                const rem = Math.max(0, 4 - c.absences);
+                totalRem += rem;
+                const perc = (c.absences / 4) * 100;
+                const color = c.absences >= 4 ? 'bg-red-500' : (c.absences >= 3 ? 'bg-amber-500' : 'bg-blue-600');
+
+                return `
+                <div class="bg-white dark:bg-darkCard p-6 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h4 class="font-bold text-lg">${c.name}</h4>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${c.day} • د. ${c.prof}</p>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-800 px-3 py-1 rounded-full">
+                            <span class="text-sm font-black ${c.absences >= 4 ? 'text-red-500' : ''}">${c.absences} / 4</span>
+                        </div>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full mb-4 overflow-hidden">
+                        <div class="${color} progress-bar h-full" style="width: ${Math.min(perc, 100)}%"></div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-bold ${c.absences >= 4 ? 'text-red-500' : 'text-slate-400'}">
+                            ${c.absences >= 4 ? 'وضعية الحرمان 💀' : `باقي لك ${rem} غيابات`}
+                        </span>
+                        <button onclick="openAbsence(${i})" class="bg-slate-900 dark:bg-blue-600 text-white text-[10px] px-4 py-2 rounded-xl font-black uppercase tracking-wider shadow-lg">تسجيل غياب</button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            document.getElementById('totalAbsCount').innerText = totalAbs;
+            document.getElementById('totalRemCount').innerText = totalRem;
+        }
+
+        function updateSmartBanner() {
+            const title = document.getElementById('smartTitle');
+            const msg = document.getElementById('smartMsg');
+            const totalLectures = appData.courses.length;
+            const canSkipWholeWeek = appData.courses.every(c => (4 - c.absences) >= 1);
+            const totalRem = appData.courses.reduce((acc, c) => acc + (4 - c.absences), 0);
+
+            if (totalRem === 0) {
+                title.innerText = "انتهت اللعبة! 💀";
+                msg.innerText = "رصيدك صفر. أي غياب قادم يعني 'حرمان' رسمي. الالتزام الآن مش خيار، هذا قدرك.";
+            } else if (canSkipWholeWeek && totalRem >= totalLectures) {
+                title.innerText = "وضعية الهروب الكبير! 🏃‍♂️";
+                msg.innerText = `تقدر تغيب الأسبوع كامل (كل محاضراتك) وتعتكف في الكافيه. رصيدك يسمح بالدلع!`;
+            } else {
+                const count = Math.min(totalRem, totalLectures);
+                title.innerText = "خلك عاقل.. ⚖️";
+                msg.innerText = `ما تقدر تغيب الأسبوع كامل، لكن تقدر "تزلب" ${count} محاضرات فقط. اختر ضحاياك بعناية!`;
+            }
+        }
+
+        // --- ACTIONS ---
+        function openAbsence(idx) {
+            selectedCourseIdx = idx;
+            document.getElementById('absenceModal').classList.replace('hidden', 'flex');
+            document.getElementById('step1').classList.remove('hidden');
+            document.getElementById('step2').classList.add('hidden');
+        }
+
+        function handleStep(tookAttendance) {
+            if (!tookAttendance) {
+                alert("الحمد لله! ما دام ما حضّر الدكتور، روح اشرب شاي عدني.");
+                closeModal();
+            } else {
+                document.getElementById('step1').classList.add('hidden');
+                document.getElementById('step2').classList.remove('hidden');
+            }
+        }
+
+        function confirmAbsence() {
+            const reason = document.getElementById('absReason').value;
+            const c = appData.courses[selectedCourseIdx];
+            c.absences++;
+            c.reasons.push(reason);
+            sync();
+            showDashboard();
+            closeModal();
+            if(c.absences >= 4) alert("🚨 رسمياً: وصلت للحرمان في هذه المادة!");
+        }
+
+        function editSchedule() {
+            renderInputs();
+            navigateTo('scheduleSetup');
+        }
+
+        function closeModal() { document.getElementById('absenceModal').classList.replace('flex', 'hidden'); }
+
+        function sync() { localStorage.setItem('gyabi_v2', JSON.stringify(appData)); }
+
+        function confirmReset() {
+            if(confirm("هل تريد تصفير كل شيء لبدء فصل دراسي جديد؟ (لا يمكن التراجع)")) {
+                localStorage.removeItem('gyabi_v2');
+                location.reload();
+            }
+        }
     </script>
 </body>
 </html>
